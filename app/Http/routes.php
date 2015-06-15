@@ -16,4 +16,5 @@ Route::get('/', function () {
 });
 Route::controllers([
     'auth' => 'Auth\AuthController',
+//    'users' => 'Auth\AuthController@getUsers',
 ]);

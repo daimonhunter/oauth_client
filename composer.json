@@ -8,7 +8,9 @@
         "php": ">=5.5.9",
         "laravel/framework": "5.1.*",
         "predis/predis" : "1.0.1",
-        "evaengine/eva-oauth": "~1.0.2"
+        "evaengine/eva-oauth": "~1.0.2",
+        "illuminate/support": "5.1.*",
+        "kalley/laravel-oauth-client": "dev-master"
     },
     "require-dev": {
         "fzaninotto/faker": "~1.4",

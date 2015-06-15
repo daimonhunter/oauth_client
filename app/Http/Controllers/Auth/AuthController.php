@@ -3,10 +3,17 @@
 namespace App\Http\Controllers\Auth;
 
 use App\User;
+use Illuminate\Support\Facades\Session;
+use Mockery\CountValidator\Exception;
 use Validator;
 use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\AuthenticatesAndRegistersUsers;
 use Illuminate\Http\Request;
+use Eva\EvaOAuth\Service;
+//use Eva\EvaOAuth\OAuth2\Providers\Wealthbetter;
+use Eva\EvaOAuth\OAuth2\Client;
+use Eva\EvaOAuth\AuthorizedHttpClient;
+use Eva\EvaOAuth\OAuth2\ResourceServer;
 
 class AuthController extends Controller
 {
@@ -31,11 +38,15 @@ class AuthController extends Controller
     public function __construct()
     {
         $this->middleware('guest', ['except' => 'getLogout']);
-        $this->service = new \Eva\EvaOAuth\Service('wealthbetter', [
-            'key' => '*****',  //对应微博的API Key
-            'secret' => '********', //对应微博的Secret
-            'callback' => 'http://******/weibo-oauth' //回调地址
+        Service::registerProvider('wealthbetter', 'Eva\EvaOAuth\OAuth2\Providers\Wealthbetter');
+        $this->service = new Service('wealthbetter', [
+            'key' => '1',  //对应微博的API Key
+            'secret' => 'gKYG75sw', //对应微博的Secret
+            'callback' => 'http://oauth_client.com/auth/' //回调地址
         ]);
+
+        $this->service->getAdapter()->registerGrantStrategy(Client::GRANT_PASSWORD,'Eva\EvaOAuth\OAuth2\GrantStrategy\Password');
+        $this->service->getAdapter()->changeGrantStrategy(Client::GRANT_PASSWORD);
     }
 
     /**
@@ -71,8 +82,35 @@ class AuthController extends Controller
     public function postLogin(Request $request)
     {
         $this->validate($request, [
-            'email' => 'required|email|max:3', 'password' => 'required',
+            'username' => 'required|max:255', 'password' => 'required',
         ]);
+        $resourceServer = new ResourceServer('http://51_demo.com/api/oauth2/access_token');
 
+        $params = ['username' => $request->get('username'), 'password' => $request->get('password')];
+        $token = $this->service->getAdapter()->getAccessToken($resourceServer,$params);
+        Session::put('token',$token);
+//        var_dump($token);
+
+    }
+
+    public function getUsers()
+    {
+        try{
+            $token = Session::get('token');
+            if(!$token){
+                throw new Exception('token is empty');
+            }
+            $httpClient = new AuthorizedHttpClient($token);
+            $response = $httpClient->get('http://51_demo.com/api/users/1',['query'=>['access_token' =>$token->getTokenValue()]]);
+            if($response->getStatusCode() == 200){
+                $stream = $response->getBody();
+                var_dump(json_decode($stream->getContents()));
+            }else{
+                echo $response->getStatusCode();
+            }
+
+        }catch (Exception $e){
+            echo $e->getMessage();
+        }
     }
 }
