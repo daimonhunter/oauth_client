@@ -82,7 +82,8 @@
     },
     "autoload": {
         "classmap": [
-            "src/Illuminate/Queue/IlluminateQueueClosure.php"
+            "src/Illuminate/Queue/IlluminateQueueClosure.php",
+            "src/Illuminate/Session/SessionServiceProvider.php"
         ],
         "files": [
             "src/Illuminate/Foundation/helpers.php",
