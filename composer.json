@@ -10,7 +10,7 @@
         "predis/predis" : "1.0.1",
         "evaengine/eva-oauth": "~1.0.2",
         "illuminate/support": "5.1.*",
-        "kalley/laravel-oauth-client": "dev-master"
+        "league/oauth2-client": "0.10.*@dev"
     },
     "require-dev": {
         "fzaninotto/faker": "~1.4",
