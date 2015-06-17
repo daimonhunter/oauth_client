@@ -9,13 +9,8 @@ use Validator;
 use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\AuthenticatesAndRegistersUsers;
 use Illuminate\Http\Request;
-use Eva\EvaOAuth\Service;
-//use Eva\EvaOAuth\OAuth2\Providers\Wealthbetter;
-use Eva\EvaOAuth\OAuth2\Client;
-use Eva\EvaOAuth\AuthorizedHttpClient;
-use Eva\EvaOAuth\OAuth2\ResourceServer;
 use League\OAuth2\Client\Provider\WealthbetterClient as WealthbetterClient;
-
+use App\Extensions\WealthbetterAPIClient as WealthbetterAPIClient;
 class AuthController extends Controller
 {
     /*
@@ -50,12 +45,13 @@ class AuthController extends Controller
 //        $this->service->getAdapter()->changeGrantStrategy(Client::GRANT_PASSWORD);
 
         //league/oauth2-client section
-        $this->provider = new WealthbetterClient([
-            'clientId' => '1',
-            'clientSecret' => 'gKYG75sw',
-            'redirectUri' => 'http://oauth_client.com/auth/',
-            'scopes' => ['basic'],
-        ]);
+//        $this->provider = new WealthbetterClient([
+//            'clientId' => '1',
+//            'clientSecret' => 'gKYG75sw',
+//            'redirectUri' => 'http://oauth_client.com/auth/',
+//            'scopes' => ['basic'],
+//        ]);
+        $this->client = new WealthbetterAPIClient();
 
     }
 
@@ -98,9 +94,10 @@ class AuthController extends Controller
 
         $params = ['username' => $request->get('username'), 'password' => $request->get('password')];
 //        $token = $this->service->getAdapter()->getAccessToken($resourceServer,$params);
-        $token = $this->provider->getAccessToken('password', $params);
+//        $token = $this->provider->getAccessToken('password', $params);
+        $token = $this->client->getAccessToken('password',$params);
         Session::put('token', $token);
-        var_dump($token);
+//        var_dump($token);
 
     }
 
@@ -116,9 +113,11 @@ class AuthController extends Controller
 //            } else {
 //                echo $response->getStatusCode();
 //            }
-            $response = $this->provider->makeRequest('http://51_demo.com/api/users',['uid' => 1],'GET');
-            var_dump($response);
-
+//            $response = $this->provider->makeRequest('http://51_demo.com/api/users',['uid' => 1],'GET');
+//            var_dump($response);
+            $token = Session::get('token');
+            $result = $this->client->request('http://51_demo.com/api/users/1',['access_token' => $token->accessToken],'GET');
+            var_dump($result);
         } catch (Exception $e) {
             echo $e->getMessage();
         }

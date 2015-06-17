@@ -32,7 +32,7 @@
 	<body>
 		<div class="container">
 			<div class="content">
-				<div class="title">404,You are Lost.</div>
+				<div class="title">404,@if ($message) {{$message}} @else You are Lost. @endif</div>
 			</div>
 		</div>
 	</body>

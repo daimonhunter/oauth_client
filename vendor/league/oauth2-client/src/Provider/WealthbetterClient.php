@@ -4,7 +4,6 @@ namespace League\OAuth2\Client\Provider;
 
 use League\OAuth2\Client\Entity\User;
 use League\OAuth2\Client\Exception\IDPException as IDPException;
-use Symfony\Component\HttpFoundation\Session\Session;
 class WealthbetterClient extends AbstractProvider
 {
     public $scopeSeparator = ' ';
@@ -119,35 +118,44 @@ class WealthbetterClient extends AbstractProvider
         return $url;
     }
 
-    public function makeToken()
+    public function getAccessToken($grant = 'authorization_code', $params = [])
     {
-//        $token = isset($_SESSION['token']) ? $_SESSION['token'] : false;
-        $session = new Session();
-        $token = $session->get('token');
-        var_dump($session);
-        if (!$token) {
-            throw new Exception('token is empty');
+        if (is_string($grant)) {
+            // PascalCase the grant. E.g: 'authorization_code' becomes 'AuthorizationCode'
+            $className = str_replace(' ', '', ucwords(str_replace(['-', '_'], ' ', $grant)));
+            $grant = 'League\\OAuth2\\Client\\Grant\\'.$className;
+            if (! class_exists($grant)) {
+                throw new \InvalidArgumentException('Unknown grant "'.$grant.'"');
+            }
+            $grant = new $grant();
+        } elseif (! $grant instanceof GrantInterface) {
+            $message = get_class($grant).' is not an instance of League\OAuth2\Client\Grant\GrantInterface';
+            throw new \InvalidArgumentException($message);
         }
-        return $token;
-    }
-    public function makeRequest($url ,array $requestParams = [] , $method = 'POST')
-    {
+
+        $defaultParams = [
+            'client_id'     => $this->clientId,
+            'client_secret' => $this->clientSecret,
+            'redirect_uri'  => $this->redirectUri,
+            'grant_type'    => $grant,
+        ];
+
+        $requestParams = $grant->prepRequestParams($defaultParams, $params);
+
         try {
-            $token = $this->makeToken();
-            $requestParams = array_merge(['access_token' => $token->access_token],$requestParams);
-            switch (strtoupper($method)) {
+            switch (strtoupper($this->method)) {
                 case 'GET':
                     // @codeCoverageIgnoreStart
                     // No providers included with this library use get but 3rd parties may
                     $client = $this->getHttpClient();
-                    $client->setBaseUrl($url . '?' . $this->httpBuildQuery($requestParams, '', '&'));
+                    $client->setBaseUrl($this->urlAccessToken() . '?' . $this->httpBuildQuery($requestParams, '', '&'));
                     $request = $client->get(null, $this->getHeaders(), $requestParams)->send();
                     $response = $request->getBody();
                     break;
                 // @codeCoverageIgnoreEnd
                 case 'POST':
                     $client = $this->getHttpClient();
-                    $client->setBaseUrl($url);
+                    $client->setBaseUrl($this->urlAccessToken());
                     $request = $client->post(null, $this->getHeaders(), $requestParams)->send();
                     $response = $request->getBody();
                     break;
@@ -176,14 +184,15 @@ class WealthbetterClient extends AbstractProvider
                 break;
         }
 
-        if (isset($result['error']) && ! empty($result['error'])) {
+        if (isset($result['status_code']) && $result['status_code'] != 200) {
             // @codeCoverageIgnoreStart
-            throw new IDPException($result);
+            return $result;
             // @codeCoverageIgnoreEnd
         }
 
-//        $result = $this->prepareAccessTokenResult($result);
+        $result = $this->prepareAccessTokenResult($result);
 
-        return $result;
+        return $grant->handleResponse($result);
     }
+
 }

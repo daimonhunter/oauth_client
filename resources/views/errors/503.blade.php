@@ -34,7 +34,7 @@
     <body>
         <div class="container">
             <div class="content">
-                <div class="title">Be right back.</div>
+                <div class="title">@if ($message) {{$message}} @else You are Lost. @endif</div>
             </div>
         </div>
     </body>
