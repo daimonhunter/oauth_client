@@ -11,8 +11,11 @@ class APIException extends \Exception
         $this->result = $result;
 
         $code = isset($result['status_code']) ? $result['status_code'] : 0;
-
-        if (isset($result['error']) && $result['error'] !== '') {
+        if (isset($result['success']) && $result['success'] !== '') {
+            //open cart
+            $message = $result['error']['warning'];
+            $code = $result['error_code'];
+        } elseif (isset($result['error']) && $result['error'] !== '') {
             // OAuth 2.0 Draft 10 style
             $message = $result['error'];
         } elseif (isset($result['message']) && $result['message'] !== '') {
@@ -21,7 +24,6 @@ class APIException extends \Exception
         } else {
             $message = 'Unknown Error.';
         }
-//        return json_encode($result);
         parent::__construct($message, $code);
     }
 

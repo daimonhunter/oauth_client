@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Exceptions\APIException;
 use App\User;
 use Illuminate\Support\Facades\Session;
 use Mockery\CountValidator\Exception;
@@ -11,6 +12,7 @@ use Illuminate\Foundation\Auth\AuthenticatesAndRegistersUsers;
 use Illuminate\Http\Request;
 use League\OAuth2\Client\Provider\WealthbetterClient as WealthbetterClient;
 use App\Extensions\WealthbetterAPIClient as WealthbetterAPIClient;
+
 class AuthController extends Controller
 {
     /*
@@ -95,7 +97,7 @@ class AuthController extends Controller
         $params = ['username' => $request->get('username'), 'password' => $request->get('password')];
 //        $token = $this->service->getAdapter()->getAccessToken($resourceServer,$params);
 //        $token = $this->provider->getAccessToken('password', $params);
-        $token = $this->client->getAccessToken('password',$params);
+        $token = $this->client->getAccessToken('password', $params);
         Session::put('token', $token);
 //        var_dump($token);
 
@@ -103,23 +105,12 @@ class AuthController extends Controller
 
     public function getUsers()
     {
+        $parmas = ['muname' => '15510722548', 'mupass' => hashPassword(9876543212)];
         try {
-
-//            $httpClient = new AuthorizedHttpClient($token);
-//            $response = $httpClient->get('http://51_demo.com/api/users/1', ['query' => ['access_token' => $token->getTokenValue()]]);
-//            if ($response->getStatusCode() == 200) {
-//                $stream = $response->getBody();
-//                var_dump(json_decode($stream->getContents()));
-//            } else {
-//                echo $response->getStatusCode();
-//            }
-//            $response = $this->provider->makeRequest('http://51_demo.com/api/users',['uid' => 1],'GET');
-//            var_dump($response);
-            $token = Session::get('token');
-            $result = $this->client->request('http://51_demo.com/api/users/1',['access_token' => $token->accessToken],'GET');
+            $result = $this->client->request('http://open.chkinn.com/api/rest/login', $parmas);
             var_dump($result);
-        } catch (Exception $e) {
-            echo $e->getMessage();
+        } catch (APIException $e) {
+            var_dump($e->getMessage());
         }
     }
 }

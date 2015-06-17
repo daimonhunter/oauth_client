@@ -65,8 +65,10 @@ class WealthbetterAPIClient extends WealthbetterClient
     public function request($url ,array $requestParams = [] , $method = 'POST')
     {
         try {
-            $token = \Session::get('token');;
-            $requestParams = array_merge(['access_token' => $token->accessToken],$requestParams);
+            $token = \Session::get('token');
+            if ($token){
+                $requestParams = array_merge(['access_token' => $token->accessToken],$requestParams);
+            }
             switch (strtoupper($method)) {
                 case 'GET':
                     // @codeCoverageIgnoreStart
